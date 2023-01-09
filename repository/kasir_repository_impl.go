@@ -4,6 +4,7 @@ import (
 	"belajar_pos/model/domain"
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type KasirRepositoryImpl struct{}
@@ -46,8 +47,22 @@ func (KasirRepositoryImpl) GetAll(ctx context.Context, tx *sql.Tx) []domain.Kasi
 }
 
 func (KasirRepositoryImpl) GetById(ctx context.Context, tx *sql.Tx, nip int) (domain.Kasir, error) {
-	//TODO implement me
-	panic("implement me")
+	SQL := "select nip,nama,alamat from kasir where nip=?"
+	rows, err := tx.QueryContext(ctx, SQL, nip)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	kasir := domain.Kasir{}
+	if rows.Next() {
+		err = rows.Scan(&kasir.Nip, &kasir.Nama, &kasir.Alamat)
+		if err != nil {
+			panic(err)
+		}
+		return kasir, nil
+	} else {
+		return kasir, errors.New("Data Tidak Ditemukan")
+	}
 }
 
 func (KasirRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, kasir domain.Kasir) {

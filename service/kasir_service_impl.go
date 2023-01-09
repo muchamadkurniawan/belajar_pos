@@ -55,8 +55,17 @@ func (service *KasirServiceImpl) FindAll(ctx context.Context) []web.KasirRespons
 }
 
 func (service *KasirServiceImpl) FindById(ctx context.Context, nip int) web.KasirResponse {
-	//TODO implement me
-	panic("implement me")
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(nil)
+		tx.Rollback()
+	}
+	defer tx.Commit()
+	id, err := service.KasirRepository.GetById(ctx, tx, nip)
+	if err != nil {
+		return web.KasirResponse{}
+	}
+	return helper.ToKasirResponse(domain.Kasir(id))
 }
 
 func (service *KasirServiceImpl) Update(ctx context.Context, response web.KasirResponse) {

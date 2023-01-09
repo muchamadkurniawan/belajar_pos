@@ -169,3 +169,12 @@ func show(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func TestServiceFindByIdConsole(t *testing.T) {
+	db := app.NewDB()
+	validate := validator.New()
+	kasirRepo := repository.NewKasirRepository()
+	kasirService := service.NewKasirService(kasirRepo, db, validate)
+	response := kasirService.FindById(context.Background(), 1)
+	fmt.Println(response)
+}
