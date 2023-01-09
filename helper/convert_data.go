@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func StructToMap(data struct{}) map[string]interface{} {
+func StructToMap(data web.KasirResponse) map[string]interface{} {
 	var myMap map[string]interface{}
 	dataConv, _ := json.Marshal(data)
 	json.Unmarshal(dataConv, &myMap)

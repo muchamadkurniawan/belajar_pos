@@ -66,11 +66,18 @@ func (KasirRepositoryImpl) GetById(ctx context.Context, tx *sql.Tx, nip int) (do
 }
 
 func (KasirRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, kasir domain.Kasir) {
-	//TODO implement me
-	panic("implement me")
+	SQL := "delete from kasir where nip = ?"
+	_, err := tx.ExecContext(ctx, SQL, kasir.Nip)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (KasirRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, kasir domain.Kasir) domain.Kasir {
-	//TODO implement me
-	panic("implement me")
+	SQL := "update kasir set nama = ?, alamat = ? where nip = ?"
+	_, err := tx.ExecContext(context.Background(), SQL, kasir.Nama, kasir.Alamat, kasir.Nip)
+	if err != nil {
+		return domain.Kasir{}
+	}
+	return kasir
 }

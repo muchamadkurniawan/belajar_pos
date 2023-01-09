@@ -15,6 +15,7 @@ import (
 	"html/template"
 	"net/http"
 	"path"
+	"strconv"
 	"testing"
 )
 
@@ -148,11 +149,83 @@ func TestServiceSaveWeb(t *testing.T) {
 	})
 
 	fmt.Println("server started at localhost:9000")
-	http.HandleFunc("/", show)
+	http.HandleFunc("/", showAll)
 	http.ListenAndServe(":9000", nil)
 }
 
-func show(w http.ResponseWriter, r *http.Request) {
+func TestServiceFindByIdConsole(t *testing.T) {
+	db := app.NewDB()
+	validate := validator.New()
+	kasirRepo := repository.NewKasirRepository()
+	kasirService := service.NewKasirService(kasirRepo, db, validate)
+	response := kasirService.FindById(context.Background(), 6)
+	fmt.Println(response)
+}
+
+func TestRepositoryDelete(t *testing.T) {
+	db := app.NewDB()
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+	repo := repository.NewKasirRepository()
+	kasir, _ := repo.GetById(context.Background(), tx, 8)
+	repo.Delete(context.Background(), tx, kasir)
+	tx.Commit()
+}
+
+func TestServiceDeleteConsole(t *testing.T) {
+	db := app.NewDB()
+	validate := validator.New()
+	kasirRepo := repository.NewKasirRepository()
+	kasirService := service.NewKasirService(kasirRepo, db, validate)
+	kasirService.Delete(context.Background(), 9)
+}
+
+func TestServiceDeleteWeb(t *testing.T) {
+	http.HandleFunc("/deleteKasir", func(w http.ResponseWriter, r *http.Request) {
+		nip := r.URL.Query().Get("nip")
+		id, err := strconv.Atoi(nip)
+		if err != nil {
+			panic(err)
+			fmt.Println("error konversi")
+		}
+		db := app.NewDB()
+		validate := validator.New()
+		kasirRepo := repository.NewKasirRepository()
+		kasirService := service.NewKasirService(kasirRepo, db, validate)
+		kasirService.Delete(context.Background(), id)
+		http.Redirect(w, r, "http://localhost:9000/", http.StatusMovedPermanently)
+	})
+
+	fmt.Println("server started at localhost:9000")
+	http.HandleFunc("/", showAll)
+	err := http.ListenAndServe(":9000", nil)
+	if err != nil {
+		return
+	}
+}
+
+func TestServiceUpdateConsole(t *testing.T) {
+	db := app.NewDB()
+	validate := validator.New()
+	kasirRepo := repository.NewKasirRepository()
+	kasirService := service.NewKasirService(kasirRepo, db, validate)
+	var id int = 1
+	kasirResponse := kasirService.FindById(context.Background(), id)
+	kasirResponse.Nama = "newNama"
+	kasirService.Update(context.Background(), kasirResponse)
+}
+
+func TestServiceUpdateWeb(t *testing.T) {
+
+	fmt.Println("server started at localhost:9000")
+	http.HandleFunc("/", showAll)
+	http.HandleFunc("/showKasir", show)
+	http.ListenAndServe(":9000", nil)
+}
+
+func showAll(w http.ResponseWriter, r *http.Request) {
 	var filepath = path.Join("view", "show.html")
 	tmpl, err := template.ParseFiles(filepath)
 	if err != nil {
@@ -170,11 +243,37 @@ func show(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TestServiceFindByIdConsole(t *testing.T) {
+func show(w http.ResponseWriter, r *http.Request) {
+	var filepath = path.Join("view", "update_kasir.html")
+	tmpl, err := template.ParseFiles(filepath)
+	nip := r.URL.Query().Get("nip")
+	id, err := strconv.Atoi(nip)
+	if err != nil {
+		panic(err)
+	}
 	db := app.NewDB()
 	validate := validator.New()
 	kasirRepo := repository.NewKasirRepository()
 	kasirService := service.NewKasirService(kasirRepo, db, validate)
-	response := kasirService.FindById(context.Background(), 1)
-	fmt.Println(response)
+	response := kasirService.FindById(context.Background(), id)
+	toMap := helper.StructToMap(response)
+	fmt.Println(toMap)
+
+	if err != nil {
+		panic(err)
+	}
+	kasir := web.KasirResponse{
+		Nip: id,
+	}
+	fmt.Println(r.Method)
+	if r.Method == "POST" {
+		fmt.Println(r.Method)
+		r.FormValue("nama")
+		kasir.Nama = r.Form.Get("nama")
+		kasir.Alamat = r.Form.Get("alamat")
+		fmt.Println(kasir)
+		kasirService.Update(context.Background(), kasir)
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	}
+	err = tmpl.Execute(w, toMap)
 }
