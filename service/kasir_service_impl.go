@@ -2,8 +2,9 @@ package service
 
 import (
 	"belajar_pos/helper"
-	"belajar_pos/model/repository"
+	"belajar_pos/model/domain"
 	"belajar_pos/model/web"
+	"belajar_pos/repository"
 	"context"
 	"database/sql"
 	"github.com/go-playground/validator/v10"
@@ -23,9 +24,21 @@ func NewKasirService(kasirRepository repository.KasirRepository, DB *sql.DB, val
 	}
 }
 
-func (service *KasirServiceImpl) Create(ctx context.Context, response web.KasirResponse) {
-	//TODO implement me
-	panic("implement me")
+func (service *KasirServiceImpl) Create(ctx context.Context, request web.KasirCreateRequest) {
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(nil)
+	}
+	defer tx.Commit()
+	kasir := domain.Kasir{
+		Nama:   request.Nama,
+		Alamat: request.Alamat,
+	}
+	service.KasirRepository.Save(ctx, tx, kasir)
+	//if save.Nip != -1 {
+	//	defer tx.Commit()
+	//}
+	//defer tx.Rollback()
 }
 
 func (service *KasirServiceImpl) FindAll(ctx context.Context) []web.KasirResponse {

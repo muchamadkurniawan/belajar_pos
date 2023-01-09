@@ -12,8 +12,17 @@ func NewKasirRepository() KasirRepository {
 	return &KasirRepositoryImpl{}
 }
 func (KasirRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, kasir domain.Kasir) domain.Kasir {
-	//TODO implement me
-	panic("implement me")
+	SQL := "insert into kasir(nama,alamat) values (?,?)"
+	result, err := tx.ExecContext(ctx, SQL, kasir.Nama, kasir.Alamat)
+	if err != nil {
+		panic(err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		panic(err)
+	}
+	kasir.Nip = int(id)
+	return kasir
 }
 
 func (KasirRepositoryImpl) GetAll(ctx context.Context, tx *sql.Tx) []domain.Kasir {
