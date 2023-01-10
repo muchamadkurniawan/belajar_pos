@@ -1,4 +1,4 @@
-package belajar_pos
+package main
 
 import (
 	"belajar_pos/app"
